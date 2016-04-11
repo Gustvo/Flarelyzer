@@ -2,6 +2,8 @@
 <span class="badge-paypal"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=XU6L3JCZGKHSG" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" alt="PayPal donate button" /></a></span>
 
 # Flarelyzer
+
+[![Join the chat at https://gitter.im/Javieracost/Flarelyzer](https://badges.gitter.im/Javieracost/Flarelyzer.svg)](https://gitter.im/Javieracost/Flarelyzer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Linux compatible version of the [Tibialyzer](https://github.com/Mytherin/Tibialyzer) extension for the MMORPG Tibia
 
 Currently implements a minimal subset of Tibialyzer's functionality, namely the on-rare-drop alerts. And just like it, Flarelyzer scans the server log and messages from the Tibia client in real-time by reading its memory in order to gather various statistics.
