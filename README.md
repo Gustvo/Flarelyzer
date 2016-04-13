@@ -13,11 +13,11 @@ Currently implements a minimal subset of Tibialyzer's functionality, namely the 
 Original, isnt it? After i saw what Mytherin accomplished (*_on Linux!_*) before creating Tibialyzer, and being a Python and Linux enthusiast myself, i just couldnt help but expanding on his work! And thats where this project's name comes from: kind of a Tibialyzer, _a la_ me [[Flare Sorcerer](http://www.tibia.com/community/?subtopic=characters&name=Flare+Sorcerer)] (:
 
 #### And what about the Tibia Rules?
-Flarelyzer does not alter the Tibia client in any way, nor does it play the game for you. It only passively scans the Tibia process memoryto check for server log and chat messages and therefore it does not go against the [Tibia Rules](.tibia.com/support/?subtopic=tibiarules&rule=3b).
+Flarelyzer does not alter the Tibia client in any way, nor does it play the game for you. It only passively scans the Tibia process memoryto check for server log and chat messages and therefore it does not go against the [Tibia Rules](http://www.tibia.com/support/?subtopic=tibiarules&rule=3b).
 
 ### Requirements
 * __Pypy:__
-    Fast, alternative, python implementation. You can grab portable binaries from [here](github.com/squeaky-pl/portable-pypy#latest-python-27-release) or simply install from your distribution's repositories (`sudo apt-get install pypy` for debian-based distros).
+    Fast, alternative, python implementation. You can grab portable binaries from [here](http://github.com/squeaky-pl/portable-pypy#latest-python-27-release) or simply install from your distribution's repositories (`sudo apt-get install pypy` for debian-based distros).
 * __Libnotify-bin:__
     Library to send desktop notifications.  To install it, you can just run `sudo apt-get install libnotify-bin` as well.
 
