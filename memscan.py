@@ -1,6 +1,5 @@
 import socket
-import signal
-from time import sleep
+from time import sleep, time
 from thread import start_new_thread
 from traceback import print_exc as stacktrace
 from subprocess import check_output, CalledProcessError
@@ -8,23 +7,31 @@ from subprocess import check_output, CalledProcessError
 cached_loot_messages = set()
 heap = tuple()
 notifier = None
+updates = []
+reads = []
 
 
 def update_heap(pid):
-	global heap
-	while True:
-		maps_file = open('/proc/%s/maps' % pid, 'r')
-		for line in maps_file.readlines():  # for each mapped region
-			mem_info = line.rsplit()
-			mapping = mem_info[-1]
-			if mapping == '[heap]':  # reading only from the heap, all the messages are allocated there!
-				region = mem_info[0].split('-')
-				start = int(region[0], 16)
-				end = int(region[1], 16)
-				if (start, end) != heap:  # check for heap expansions
-					heap = (start, end)
-		maps_file.close()
-		sleep(1)
+	try:
+		global heap
+		global updates
+		while True:
+			iniT = time()
+			maps_file = open('/proc/%s/maps' % pid, 'r')
+			for line in maps_file.readlines():  # for each mapped region
+				mem_info = line.rsplit()
+				mapping = mem_info[-1]
+				if mapping == '[heap]':  # reading only from the heap, all the messages are allocated there!
+					region = mem_info[0].split('-')
+					start = int(region[0], 16)
+					end = int(region[1], 16)
+					if (start, end) != heap:  # check for heap expansions
+						heap = (start, end)
+			maps_file.close()
+			updates.append(time() - iniT)
+			sleep(1)
+	except KeyboardInterrupt:
+		pass
 
 
 def is_timestamp(string):
@@ -44,7 +51,10 @@ def messages(chunk):
 
 def read_process_memory(pid):
 	global heap
-	mem_file = open('/proc/%s/mem' % pid, 'r')
+	try:
+		mem_file = open('/proc/%s/mem' % pid, 'r')
+	except IOError:
+		quit()  # Tibia client closed
 	item_drops = []
 	exp = dict()
 	try:
@@ -52,6 +62,7 @@ def read_process_memory(pid):
 			start_new_thread(update_heap, (pid,))
 			while not heap:
 				sleep(0.2)
+		iniT = time()
 		start, end = heap
 		mem_file.seek(start)
 		try:
@@ -81,6 +92,7 @@ def read_process_memory(pid):
 		return
 	finally:
 		mem_file.close()
+		reads.append(time() - iniT)
 
 	return_values = dict()
 	return_values['item_drops'] = item_drops
@@ -88,14 +100,17 @@ def read_process_memory(pid):
 	return return_values
 
 
-def quit():
+def quit(retval=0):
+	global reads
+	global updates
 	try:
 		notifier.close()
 	except: pass
 	print '--Memory scanner closed--'
-	exit(0)
-
-signal.signal(signal.SIGTERM, lambda x, y: quit)
+	if reads and updates:
+		print 'Statistics:'
+		print 'Average memory read time: ', (sum(reads) / len(reads)),'\nAverage heap update time: ', (sum(updates) / len(updates))
+	exit(retval)
 
 
 def main():
@@ -112,15 +127,16 @@ def main():
 		print 'Unable to connect to notification agent!'
 	except CalledProcessError:
 		print 'Tibia client not found!'
+		quit(1)
 	except:
 		print 'Unexpected error'
 		stacktrace()
 	else:
 		# we're good to go
 		print '===Memory analyzer started==='
-		notifier.sendall('ATTACHED')
-		while True:
-			try:
+		try:
+			notifier.sendall('ATTACHED')
+			while True:
 				res = read_process_memory(tibiaPID)
 				if not res:
 					quit()
@@ -130,14 +146,14 @@ def main():
 				notifier.sendall('NEXT')
 				response = notifier.recv(8)
 				if response == 'QUIT':
-					quit()
+					raise KeyboardInterrupt
 				sleep(0.1)
-			except:
-				stacktrace()
-				quit()
-			sleep(0.1)
+		except KeyboardInterrupt:
+			pass
+		except Exception:
+			stacktrace()
+			quit()
 	print '==Aborting=='
-	exit(1)
 
 if __name__ == '__main__':
 	main()
