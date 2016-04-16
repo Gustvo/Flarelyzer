@@ -4,7 +4,7 @@
 
 #TODO: general revamp needed!
 #TODO: Qt UI
-#FIXME: avoid discarding duplicate loot (same msg, same timestamp, different monst)
+#TODO: improve exit execution paths
 
 import os
 import sys
@@ -28,11 +28,9 @@ def quit():
 	global agent
 	if agent:
 		agent.terminate()
-	if scanner:
-		scanner.terminate()
 	print '==Terminated=='
 	sys.exit(0)
-signal.signal(signal.SIGTERM, lambda x, y: quit)
+signal.signal(signal.SIGTERM, lambda x, y: quit())
 
 
 def check_installed(binary):
@@ -56,8 +54,11 @@ try:
 	while not os.path.exists(sockfile):
 		time.sleep(0.05)  #probably a hack
 	scanner = Popen([sudo, 'pypy', 'memscan.py'])
-	agent.wait()
-	scanner.wait()
+	scanerror = scanner.wait()
+	if not scanerror:
+		agent.wait()
+	else:
+		agent.terminate()
 except KeyboardInterrupt:
 	print '\nKeyboard Interrupt, closing...'
 	quit()

@@ -1,18 +1,22 @@
 import csv
 import socket
-import signal
 from constants import *
+from string import capwords
 from subprocess import call
 from os import unlink as delete
 from traceback import print_exc as stacktrace
 
 interesting = {'rubber cap', 'heat core', 'terra mantle', 'steel boots', 'terra legs', 'dreaded cleaver', "butcher's axe", 'mercenary sword',
                'glooth amulet', 'giant shimmering pearl', 'terra amulet', 'terra hood', 'terra boots', 'glooth cape', 'glooth axe',
-               'glooth club', 'glooth blade', 'glooth bag', 'green gem', 'skull staff', 'cheese',
-               'crown armor', 'royal helmet', 'medusa shield','tower shield', 'giant sword', 'sacred tree amulet',
+               'glooth club', 'glooth blade', 'glooth bag', 'green gem', 'skull staff', 'metal bat', 'gearwheel chain',
+               'crown armor', 'royal helmet', 'medusa shield', 'tower shield', 'giant sword', 'sacred tree amulet',
                'zaoan armor', 'zaoan helmet', 'zaoan legs', 'zaoan shoes',
                'deepling squelcher', 'deepling staff', 'necklace of the deep', 'ornate crossbow', 'guardian axe',
-               'foxtail', 'heavy trident', "warrior's shield", "warrior's axe"
+               'foxtail', 'heavy trident', "warrior's shield", "warrior's axe",
+               'magic plate armor', 'golden legs', 'mastermind shield', 'fire axe', 'demon shield', 'giant sword','demon trophy',
+               'demonrage sword', 'gold ring', 'platinum amulet', 'magma legs', 'amber staff', 'onyx flail', 'fire sword', 'magma monocle',
+               'magma boots', 'ruthless axe', 'wand of inferno', 'gold ingot',
+               'cheese'
                }
 
 notif_time = 2  # in seconds
@@ -35,15 +39,15 @@ def quit():
     try:
         print 'stopping memory scanner'
         client.sendall('QUIT')
-        client.close()
+        client.recv(10)
     except: pass
-    notify('Flarelyzer', 'Closed!')
-    delete(sockfile)
-    print '--Notification agent closed--'
-    exit(0)
-
-
-signal.signal(signal.SIGTERM, lambda x, y: quit)
+    finally:
+        print '--Notification agent closed--'
+        client.close()
+        delete(sockfile)
+        notify('Flarelyzer', 'Closed!')
+        #print '--Notification agent closed--'
+    exit()
 
 
 def process_loot(loot):
@@ -90,7 +94,10 @@ client, addr = agent.accept()
 try:
     while True:
         full_msg = client.recv(1024)
-        client.sendall('ACK')
+        try:
+            client.sendall('ACK')
+        except IOError:
+            quit()
         if full_msg == 'ATTACHED':
             notify('Flarelyzer', 'Started successfully!')
             continue
@@ -113,12 +120,13 @@ try:
             for v in valuables:
                 if loot_amounts[v] != '0':
                     lootmsg += loot_amounts[v] + ' '
-                lootmsg += v.title() + ', '
+                lootmsg += capwords(v) + ', '
             else:
                 lootmsg = lootmsg[:-2]
             notify(monster.title(), lootmsg)
-except:
-    print 'Notification agent error!'
+except KeyboardInterrupt:
+    pass
+except Exception, e:
+    print 'Notification agent error!'+str(e)
     stacktrace()
-finally:
     quit()
