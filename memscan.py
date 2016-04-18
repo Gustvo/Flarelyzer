@@ -7,8 +7,8 @@ from subprocess import check_output, CalledProcessError
 cached_loot_messages = set()
 heap = tuple()
 notifier = None
-updates = []
-reads = []
+updates = list()
+reads = list()
 
 
 def update_heap(pid):
@@ -39,14 +39,19 @@ def is_timestamp(string):
 
 
 def messages(chunk):
-	index = 0
-	while index < len(chunk) - 6:  # No point in reading something shorter than '00:00 '
+	offset = 0
+	while True:
+		index = chunk.find(':', offset) - 2
+		if index < 0 or index > len(chunk) - 6:  # No point in reading something shorter than '00:00 '
+			break
 		if is_timestamp(chunk[index: index + 6]):
 			endPos = chunk.find('\0', index + 6)
-			yield chunk[index:endPos]
-			index = endPos + 1
+			message = chunk[index:endPos]
+			if len(message) > 6:
+				yield message
+			offset = endPos + 1
 		else:
-			index += 1
+			offset = index + 8
 
 
 def read_process_memory(pid):
@@ -152,8 +157,8 @@ def main():
 			pass
 		except Exception:
 			stacktrace()
-			quit()
 	print '==Aborting=='
+	quit()
 
 if __name__ == '__main__':
 	main()
